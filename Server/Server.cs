@@ -69,7 +69,7 @@ namespace Server
 
         private void ProcessRequest(byte[] requestData, IPEndPoint clientEndPoint)
         {
-            StringBuilder message = new StringBuilder(" Запрос получен"); ;
+            StringBuilder message = new StringBuilder("Запрос получен"); ;
             ResponseType responseType = ResponseType.Success;
             // Десериализация запроса
             string jsonRequest = Encoding.UTF8.GetString(requestData);
@@ -87,8 +87,8 @@ namespace Server
                         {
                             Logger.Info("Запись удалена.");
 
-                            yachtClubController.RemoveRecord(index);
-                            message = new StringBuilder("Запись успешно удалена.");
+                            var mes = yachtClubController.RemoveRecord(index);
+                            message = new StringBuilder(mes);
                             responseType = ResponseType.Success;
                         }
                         else
@@ -109,19 +109,9 @@ namespace Server
                 case RequestType.GetAll:
                     try
                     {
-
                         message = new StringBuilder();
                         var list = yachtClubController.GetYachtClubs();
-                        for (int index = 0; index < list.Count; index++)
-                        {
-                            message.Append($"ID : {list[index].Id}" +
-                                $"\nНазвание : {list[index].Name}" +
-                                $"\nАдрес : {list[index].Address}" +
-                                $"\nКоличество яхт : {list[index].NumberOfYachts}" +
-                                $"\nКоличество мест : {list[index].NumberOfPlaces}" +
-                                $"\nНаличие бассейна : {list[index].HasPool}" +
-                                $"\n----------------------------------\n");
-                        }
+                        message = new StringBuilder(list);
                     }
                     catch (Exception ex)
                     {
@@ -137,13 +127,7 @@ namespace Server
                         if (request.Parametrs.TryGetValue("Index", out string indexString) && int.TryParse(indexString, out int index))
                         {
                             var el = yachtClubController.GetYachtClub(index);
-                            message = new StringBuilder($"Индекс : {index}" +
-                            $"\nНазвание : {el.Name}" +
-                            $"\nАдрес : {el.Address}" +
-                            $"\nКоличество яхт : {el.NumberOfYachts}" +
-                            $"\nКоличество мест : {el.NumberOfPlaces}" +
-                            $"\nНаличие бассейна : {el.HasPool}" +
-                            $"\n----------------------------------");
+                            message = new StringBuilder(el);
                             responseType = ResponseType.Success;
                         }
                         else
@@ -185,10 +169,10 @@ namespace Server
                                 NumberOfPlaces = numberOfPlaces,
                                 HasPool = hasPool
                             };
-                            yachtClubController.AddRecord(newYachtClub);
+                            var mes = yachtClubController.AddRecord(newYachtClub);
                             Logger.Info("Запись добавлена.");
 
-                            message = new StringBuilder("Запись успешно добавлена.");
+                            message = new StringBuilder(mes);
                             responseType = ResponseType.Success;
                             
                         }
@@ -206,7 +190,6 @@ namespace Server
                         responseType = ResponseType.Error;
                     }
                     break;
-
                 case RequestType.Menu:
                     message = new StringBuilder("Список команд:\n- delete\n- getAll\n- getOne\n- post\n- exit");
                     break;
@@ -214,13 +197,9 @@ namespace Server
                     responseType = ResponseType.Error;
                     message = new StringBuilder("неверная команда");
                     break;
-
-
             }
-
             ServerResponse(message,responseType,clientEndPoint);
         }
-
         private void ServerResponse(StringBuilder message,ResponseType respType,IPEndPoint clientEndPoint)
         {
             // Подготовка ответа

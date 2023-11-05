@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Data.Entity;
@@ -14,30 +15,45 @@ namespace Server
             dbContext = new YachtClubContext();
         }
 
-        public void RemoveRecord(int id)
+        public string RemoveRecord(int id)
         {
             var yachtClub = dbContext.YachtClubs.Find(id);
             if (yachtClub != null)
             {
                 dbContext.YachtClubs.Remove(yachtClub);
                 dbContext.SaveChanges();
+                return JsonConvert.SerializeObject(new { Message = "Запись успешко удалена" });
+            }
+            else
+            {
+                return JsonConvert.SerializeObject(new { Message = "Запись не найдена" });
             }
         }
 
-        public List<YachtClub> GetYachtClubs()
+        public string GetYachtClubs()
         {
-            return dbContext.YachtClubs.ToList();
+            List<YachtClub> yachtClubs = dbContext.YachtClubs.ToList();
+            return JsonConvert.SerializeObject(yachtClubs);
         }
 
-        public YachtClub GetYachtClub(int id)
+        public string GetYachtClub(int id)
         {
-            return dbContext.YachtClubs.Find(id);
+            YachtClub yachtClub = dbContext.YachtClubs.Find(id);
+            if (yachtClub != null)
+            {
+                return JsonConvert.SerializeObject(yachtClub);
+            }
+            else
+            {
+                return JsonConvert.SerializeObject(new { Message = "Запись не найдена" });
+            }
         }
 
-        public void AddRecord(YachtClub yachtClub)
+        public string AddRecord(YachtClub yachtClub)
         {
             dbContext.YachtClubs.Add(yachtClub);
             dbContext.SaveChanges();
+            return JsonConvert.SerializeObject(yachtClub);
         }
     }
 }
