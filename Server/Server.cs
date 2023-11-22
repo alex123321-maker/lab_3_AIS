@@ -1,7 +1,9 @@
 ﻿using Client;
+using Newtonsoft.Json;
 using NLog;
 using NLog.Config;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Data.Entity;
 using System.Net;
@@ -185,6 +187,62 @@ namespace Server
                     }
                     catch (Exception ex)
                     {
+                        Logger.Fatal(ex);
+                        message = new StringBuilder($"Ошибка: {ex}");
+                        responseType = ResponseType.Error;
+                    }
+                    break;
+                case RequestType.Update:
+                    try
+                    {
+                        if (request.Parametrs.TryGetValue("Id", out string idString) && int.TryParse(idString, out int id) &&
+                            request.Parametrs.TryGetValue("Name", out string name) &&
+                            request.Parametrs.TryGetValue("Address", out string address) &&
+                            request.Parametrs.TryGetValue("NumberOfYachts", out string numberOfYachtsStr) &&
+                            int.TryParse(numberOfYachtsStr, out int numberOfYachts) &&
+                            request.Parametrs.TryGetValue("NumberOfPlaces", out string numberOfPlacesStr) &&
+                            int.TryParse(numberOfPlacesStr, out int numberOfPlaces) &&
+                            request.Parametrs.TryGetValue("HasPool", out string hasPoolStr) &&
+                            bool.TryParse(hasPoolStr, out bool hasPool))
+                        {
+                            YachtClub updatedYachtClub = new YachtClub
+                            {
+                                Name = name,
+                                Address = address,
+                                NumberOfYachts = numberOfYachts,
+                                NumberOfPlaces = numberOfPlaces,
+                                HasPool = hasPool
+                            };
+                            yachtClubController.UpdateRecord(id, updatedYachtClub);
+                            Logger.Info("Запись обновлена.");
+
+                            message = new StringBuilder("Запись успешно обновлена.");
+                            responseType = ResponseType.Success;
+                        }
+                        else
+                        {
+                            Logger.Error("Ошибка: Некорректные параметры запроса.");
+                            message = new StringBuilder("Ошибка: Некорректные параметры запроса.");
+                            responseType = ResponseType.Error;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Fatal(ex);
+                        message = new StringBuilder($"Ошибка: {ex.Message}");
+                        responseType = ResponseType.Error;
+                    }
+                    break;
+                case RequestType.UpdateTable:
+                    try
+                    {
+                        var list = new List<YachtClub>();
+                        list = JsonConvert.DeserializeObject<List<YachtClub>>(request.Message);
+                        var response = yachtClubController.DeleteAndLoadData(list);
+                        message = new StringBuilder(response);
+                        responseType = ResponseType.Success;    
+                    }
+                    catch (Exception ex){
                         Logger.Fatal(ex);
                         message = new StringBuilder($"Ошибка: {ex}");
                         responseType = ResponseType.Error;
